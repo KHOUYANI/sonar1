@@ -17,6 +17,7 @@ function calculer_rapport($ventes)
         }
     }
     $moyenne = $total / $nombre;
+    echo "Total : " . $total;
     echo "Moyenne : " . $moyenne;
     echo "Maximum : " . $maximum;
     echo "Minimum : " . $minimum;
