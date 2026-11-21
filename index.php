@@ -1,97 +1,108 @@
 <?php
 
-// TODO: nettoyer ce fichier avant la mise en production   <-- CODE SMELL : commentaire TODO oublié
+// TODO: nettoyer ce fichier                       <-- CODE SMELL (TODO oublié)
 
-// ❌ VULNÉRABILITÉ : mot de passe écrit en dur dans le code
-$db_password = "admin123";
-$api_key = "sk_live_12345abcde";
+// =====================================================
+// 🔓 VULNÉRABILITÉS (le hacker peut en profiter)
+// =====================================================
 
-// ❌ CODE SMELL : variable déclarée mais jamais utilisée
-$compteur = 0;
+$db_password = "admin123";               // mot de passe écrit dans le code
+$api_key = "sk_live_12345abcde";         // clé secrète écrite dans le code
 
-
-// ❌ BUG : division par zéro (le programme va planter)
-function calculer()
-{
-    return 10 / 0;
-}
-
-
-// ❌ VULNÉRABILITÉ : injection SQL (on met directement ce que l'utilisateur écrit dans la requête)
 function chercher_utilisateur($connexion)
 {
     $nom = $_GET['nom'];
+    // injection SQL : on colle l'entrée de l'utilisateur dans la requête
     $requete = "SELECT * FROM users WHERE nom = '" . $nom . "'";
     return mysqli_query($connexion, $requete);
 }
 
-
-// ❌ VULNÉRABILITÉ : XSS (on affiche ce que l'utilisateur écrit sans le nettoyer)
 function afficher_bienvenue()
 {
-    echo "Bienvenue " . $_GET['nom'];
+    echo "Bienvenue " . $_GET['nom'];    // XSS : affichage sans nettoyage
 }
 
-
-// ❌ SECURITY HOTSPOT : md5 est un algorithme trop faible pour un mot de passe
-function crypter_mot_de_passe($mdp)
-{
-    return md5($mdp);
-}
-
-
-// ❌ VULNÉRABILITÉ : eval exécute n'importe quel code écrit par l'utilisateur
 function executer($code)
 {
-    return eval($code);
+    return eval($code);                  // exécute n'importe quel code
+}
+
+function crypter($mdp)
+{
+    return md5($mdp);                    // algorithme de hachage faible
 }
 
 
-// ❌ CODE SMELL : le catch est vide, l'erreur est cachée
-function lire_fichier($chemin)
+// =====================================================
+// 🐞 BUGS (le programme ne fait pas ce qu'on veut)
+// =====================================================
+
+// Bug 1 : on compare la variable avec elle-même
+function comparer($a)
 {
-    try {
-        return file_get_contents($chemin);
-    } catch (Exception $e) {
+    if ($a == $a) {
+        return "toujours vrai";
+    }
+    return "jamais";
+}
+
+// Bug 2 : la même condition est écrite deux fois (la 2e n'est jamais atteinte)
+function type_utilisateur($role)
+{
+    if ($role == "admin") {
+        return "A";
+    } elseif ($role == "admin") {
+        return "B";
+    }
+    return "C";
+}
+
+// Bug 3 : code après return (jamais exécuté)
+function calcul()
+{
+    return 10;
+    echo "ce message ne s'affichera jamais";
+}
+
+// Bug 4 : le résultat de trim() est jeté, la fonction ne fait rien
+function nettoyer($texte)
+{
+    trim($texte);
+    return $texte;
+}
+
+// Bug 5 : on crée un objet et on le jette tout de suite
+function creer_date()
+{
+    new DateTime();
+}
+
+// Bug 6 : la boucle ne tourne qu'une seule fois
+function premier($liste)
+{
+    foreach ($liste as $element) {
+        return $element;
     }
 }
 
-
-// ❌ DUPLICATION : les deux fonctions sont exactement les mêmes
-function total_a($liste)
+// Bug 7 : on cache les erreurs avec @
+function lire($chemin)
 {
-    $total = 0;
-    foreach ($liste as $nombre) {
-        if ($nombre > 0) {
-            $total = $total + $nombre;
-        } else {
-            $total = $total - $nombre;
-        }
-    }
-    return $total;
-}
-
-function total_b($liste)
-{
-    $total = 0;
-    foreach ($liste as $nombre) {
-        if ($nombre > 0) {
-            $total = $total + $nombre;
-        } else {
-            $total = $total - $nombre;
-        }
-    }
-    return $total;
+    return @file_get_contents($chemin);
 }
 
 
-// ❌ CODE SMELL : trop de "if" les uns dans les autres (code difficile à lire)
+// =====================================================
+// 🧹 CODE SMELLS (code mal écrit)
+// =====================================================
+
 function verifier($a, $b, $c, $d)
 {
+    $inutile = 5;                        // variable jamais utilisée
     if ($a) {
         if ($b) {
             if ($c) {
-                if ($d) {
+                if ($d) {                // trop de "if" imbriqués
                     return "ok";
                 }
             }
@@ -100,4 +111,63 @@ function verifier($a, $b, $c, $d)
     return "ko";
 }
 
-echo calculer();
+function ouvrir($chemin)
+{
+    try {
+        return file_get_contents($chemin);
+    } catch (Exception $e) {             // catch vide : l'erreur disparaît
+    }
+}
+
+
+// =====================================================
+// 📋 DUPLICATION (même code copié-collé deux fois)
+// =====================================================
+
+function rapport_ventes($ventes)
+{
+    $total = 0;
+    $nombre = 0;
+    $maximum = 0;
+    $minimum = 999999;
+    foreach ($ventes as $vente) {
+        $total = $total + $vente;
+        $nombre = $nombre + 1;
+        if ($vente > $maximum) {
+            $maximum = $vente;
+        }
+        if ($vente < $minimum) {
+            $minimum = $vente;
+        }
+    }
+    $moyenne = $total / $nombre;
+    echo "Total : " . $total;
+    echo "Moyenne : " . $moyenne;
+    echo "Maximum : " . $maximum;
+    echo "Minimum : " . $minimum;
+    return $moyenne;
+}
+
+function rapport_achats($ventes)
+{
+    $total = 0;
+    $nombre = 0;
+    $maximum = 0;
+    $minimum = 999999;
+    foreach ($ventes as $vente) {
+        $total = $total + $vente;
+        $nombre = $nombre + 1;
+        if ($vente > $maximum) {
+            $maximum = $vente;
+        }
+        if ($vente < $minimum) {
+            $minimum = $vente;
+        }
+    }
+    $moyenne = $total / $nombre;
+    echo "Total : " . $total;
+    echo "Moyenne : " . $moyenne;
+    echo "Maximum : " . $maximum;
+    echo "Minimum : " . $minimum;
+    return $moyenne;
+}
